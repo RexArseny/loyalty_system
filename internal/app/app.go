@@ -21,7 +21,7 @@ func NewServer(
 	cfg *config.Config,
 	dataRepository repository.Repository,
 ) (*http.Server, error) {
-	accrualServiceClient := external.NewAccrualServiceClient(cfg.AccrualSystemAddress)
+	accrualServiceClient := external.NewAccrualServiceClient(logger.Named("accrual"), cfg.AccrualSystemAddress)
 	interactor := usecases.NewInteractor(ctx, logger.Named("interactor"), dataRepository, accrualServiceClient)
 	controller := controllers.NewController(logger.Named("controller"), interactor)
 	middleware, err := middlewares.NewMiddleware(

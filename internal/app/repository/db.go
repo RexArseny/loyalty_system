@@ -1,3 +1,4 @@
+//nolint:goconst // transaction errors are positional
 package repository
 
 import (
@@ -50,7 +51,13 @@ func NewDBRepository(ctx context.Context, logger *zap.Logger, connString string)
 	}, nil
 }
 
-func (d *DBRepository) Registration(ctx context.Context, login string, hash string, salt string, userID uuid.UUID) error {
+func (d *DBRepository) Registration(
+	ctx context.Context,
+	login string,
+	hash string,
+	salt string,
+	userID uuid.UUID,
+) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("can not start transaction: %w", err)

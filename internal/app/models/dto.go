@@ -24,6 +24,6 @@ type WithdrawRequest struct {
 
 type WithdrawResponse struct {
 	Order       string `json:"order"`
-	Sum         int    `json:"sum"`
 	ProcessedAt string `json:"processed_at"`
+	Sum         int    `json:"sum"`
 }

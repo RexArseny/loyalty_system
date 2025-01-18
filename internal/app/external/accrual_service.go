@@ -6,17 +6,21 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"go.uber.org/zap"
 )
 
 type AccrualServiceClient struct {
 	client  *http.Client
+	logger  *zap.Logger
 	address string
 }
 
-func NewAccrualServiceClient(address string) AccrualServiceClient {
+func NewAccrualServiceClient(logger *zap.Logger, address string) AccrualServiceClient {
 	return AccrualServiceClient{
 		client:  http.DefaultClient,
 		address: address,
+		logger:  logger,
 	}
 }
 
@@ -30,6 +34,12 @@ func (c *AccrualServiceClient) GetData(ctx context.Context, order *string) (*Acc
 	if err != nil {
 		return nil, fmt.Errorf("can not read accrual service response: %w", err)
 	}
+	defer func() {
+		err = response.Body.Close()
+		if err != nil {
+			c.logger.Error("Can not close response body", zap.Error(err))
+		}
+	}()
 
 	var result AccrualResponse
 	err = json.Unmarshal(data, &result)

@@ -15,18 +15,18 @@ type User struct {
 
 type Order struct {
 	UploadedAt time.Time
-	Accrual    *int
+	Accrual    *float64
 	Number     string
 	Status     string
 }
 
 type Balance struct {
 	Current   float64
-	Withdrawn int
+	Withdrawn float64
 }
 
 type Withdraw struct {
 	ProcessedAt time.Time
 	Order       string
-	Sum         int
+	Sum         float64
 }

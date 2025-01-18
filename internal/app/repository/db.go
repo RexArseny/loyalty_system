@@ -200,7 +200,7 @@ func (d *DBRepository) GetBalance(ctx context.Context, userID uuid.UUID) (*Balan
 	return &balance, nil
 }
 
-func (d *DBRepository) Withdraw(ctx context.Context, orderNumber string, sum int, userID uuid.UUID) error {
+func (d *DBRepository) Withdraw(ctx context.Context, orderNumber string, sum float64, userID uuid.UUID) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("can not start transaction: %w", err)
@@ -220,12 +220,12 @@ func (d *DBRepository) Withdraw(ctx context.Context, orderNumber string, sum int
 		return fmt.Errorf("can not get balance: %w", err)
 	}
 
-	if int(balance.Current)-sum < 0 {
+	if balance.Current-sum < 0 {
 		return ErrNotEnoughBalance
 	}
 
 	_, err = tx.Exec(ctx, `UPDATE balances SET balance = $1, withdrawn = $2 WHERE user_id = $3`,
-		int(balance.Current)-sum, balance.Withdrawn+sum, userID)
+		balance.Current-sum, balance.Withdrawn+sum, userID)
 	if err != nil {
 		return fmt.Errorf("can not update balance: %w", err)
 	}
@@ -297,7 +297,7 @@ func (d *DBRepository) UpdateOrder(
 	ctx context.Context,
 	orderNumber string,
 	status string,
-	accrual *int,
+	accrual *float64,
 	userID *uuid.UUID,
 ) error {
 	tx, err := d.pool.Begin(ctx)

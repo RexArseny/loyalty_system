@@ -48,7 +48,7 @@ type Repository interface {
 	Withdraw(
 		ctx context.Context,
 		orderNumber string,
-		sum int,
+		sum float64,
 		userID uuid.UUID,
 	) error
 	GetWithdrawals(
@@ -62,7 +62,7 @@ type Repository interface {
 		ctx context.Context,
 		orderNumber string,
 		status string,
-		accrual *int,
+		accrual *float64,
 		userID *uuid.UUID,
 	) error
 	Close()

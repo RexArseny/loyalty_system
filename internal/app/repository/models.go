@@ -7,17 +7,17 @@ import (
 )
 
 type User struct {
-	UserID uuid.UUID
 	Login  string
 	Hash   string
 	Salt   string
+	UserID uuid.UUID
 }
 
 type Order struct {
+	UploadedAt time.Time
+	Accrual    *int
 	Number     string
 	Status     string
-	Accrual    *int
-	UploadedAt time.Time
 }
 
 type Balance struct {
@@ -26,7 +26,7 @@ type Balance struct {
 }
 
 type Withdraw struct {
+	ProcessedAt time.Time
 	Order       string
 	Sum         int
-	ProcessedAt time.Time
 }

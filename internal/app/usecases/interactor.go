@@ -1,3 +1,4 @@
+//nolint:gomnd // numbers in math operations
 package usecases
 
 import (
@@ -23,8 +24,8 @@ const (
 
 type Interactor struct {
 	dataRepository       repository.Repository
-	accrualServiceClient external.AccrualServiceClient
 	logger               *zap.Logger
+	accrualServiceClient external.AccrualServiceClient
 }
 
 func NewInteractor(
@@ -184,9 +185,9 @@ func (i *Interactor) GetWithdrawals(ctx context.Context, userID uuid.UUID) ([]mo
 func (i *Interactor) generateSalt() ([]byte, error) {
 	salt := make([]byte, saltSize)
 
-	_, err := rand.Read(salt[:])
+	_, err := rand.Read(salt)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("can not generate salt: %w", err)
 	}
 
 	return salt, nil

@@ -294,7 +294,13 @@ func (d *DBRepository) GetOrderForUpdate(ctx context.Context) (*string, *uuid.UU
 	return &order, &userID, nil
 }
 
-func (d *DBRepository) UpdateOrder(ctx context.Context, orderNumber string, status string, accrual *int, userID *uuid.UUID) error {
+func (d *DBRepository) UpdateOrder(
+	ctx context.Context,
+	orderNumber string,
+	status string,
+	accrual *int,
+	userID *uuid.UUID,
+) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("can not start transaction: %w", err)

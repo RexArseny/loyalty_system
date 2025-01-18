@@ -12,7 +12,7 @@ CREATE TABLE users (
 CREATE TABLE orders (
   order_id text NOT NULL,
   status text NOT NULL,
-  accrual integer,
+  accrual double precision,
   uploaded_at timestamp with time zone NOT NULL,
 	user_id uuid NOT NULL,
 	CONSTRAINT orders_pk PRIMARY KEY (order_id)
@@ -20,15 +20,15 @@ CREATE TABLE orders (
 
 CREATE TABLE balances (
 	user_id uuid NOT NULL,
-  balance float8 NOT NULL,
-  withdrawn integer NOT NULL,
+  balance double precision NOT NULL,
+  withdrawn double precision NOT NULL,
 	CONSTRAINT balances_pk PRIMARY KEY (user_id)
 );
 
 CREATE TABLE withdrawals (
 	user_id uuid NOT NULL,
   order_id text NOT NULL,
-	sum integer NOT NULL,
+	sum double precision NOT NULL,
 	processed_at timestamp with time zone NOT NULL
 );
 

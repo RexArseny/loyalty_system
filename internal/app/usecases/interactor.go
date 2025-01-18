@@ -1,4 +1,3 @@
-//nolint:gomnd // numbers in math operations
 package usecases
 
 import (

@@ -1,4 +1,3 @@
-//nolint:dupl // auth metods are grouped
 package controllers
 
 import (

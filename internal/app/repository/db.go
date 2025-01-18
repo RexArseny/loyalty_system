@@ -1,4 +1,3 @@
-//nolint:goconst // transaction errors are positional
 package repository
 
 import (

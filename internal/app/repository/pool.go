@@ -1,4 +1,3 @@
-//nolint:wrapcheck // methods have been overridden so errors passed through
 package repository
 
 import (

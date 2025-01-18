@@ -1,5 +1,14 @@
 package models
 
+const (
+	StatusNew        Status = "NEW"
+	StatusProcessing Status = "PROCESSING"
+	StatusInvalid    Status = "INVALID"
+	StatusProcessed  Status = "PROCESSED"
+)
+
+type Status string
+
 type AuthRequest struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`

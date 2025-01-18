@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/RexArseny/loyalty_system/internal/app/external"
+	"github.com/RexArseny/loyalty_system/internal/app/models"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -138,7 +139,7 @@ func (d *DBRepository) AddOrder(ctx context.Context, orderNumber string, userID 
 	_, err = tx.Exec(ctx, `INSERT INTO orders (order_id, status, uploaded_at, user_id)
 							VALUES ($1, $2, $3, $4)`,
 		orderNumber,
-		external.StatusRegistered,
+		models.StatusNew,
 		time.Now(),
 		userID)
 	if err != nil {
@@ -282,7 +283,7 @@ func (d *DBRepository) GetOrderForUpdate(ctx context.Context) (*string, *uuid.UU
 								FROM orders
 								WHERE status = $1
 								ORDER BY uploaded_at DESC
-								LIMIT 1`, external.StatusRegistered).Scan(&order, &userID)
+								LIMIT 1`, models.StatusNew).Scan(&order, &userID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil, nil

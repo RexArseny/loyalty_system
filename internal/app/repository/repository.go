@@ -10,14 +10,9 @@ import (
 )
 
 var (
-	ErrOriginalLoginUniqueViolation = errors.New("login is not unique")
-	ErrInvalidAuthData              = errors.New("login or password is incorrect")
-	ErrAlreadyAdded                 = errors.New("order has been already added")
-	ErrAlreadyAddedByAnotherUser    = errors.New("order has been already added by another user")
-	ErrInvalidOrderNumber           = errors.New("invalid order number")
-	ErrNoOrders                     = errors.New("no orders")
-	ErrNotEnoughBalance             = errors.New("not enough balance")
-	ErrNoWithdrawals                = errors.New("no withdrawals")
+	ErrNoOrders         = errors.New("no orders")
+	ErrNotEnoughBalance = errors.New("not enough balance")
+	ErrNoWithdrawals    = errors.New("no withdrawals")
 )
 
 type Repository interface {
@@ -55,15 +50,15 @@ type Repository interface {
 		ctx context.Context,
 		userID uuid.UUID,
 	) ([]Withdraw, error)
-	GetOrderForUpdate(
+	GetOrdersForUpdate(
 		ctx context.Context,
-	) (*string, *uuid.UUID, error)
+	) ([]Order, error)
 	UpdateOrder(
 		ctx context.Context,
 		orderNumber string,
 		status string,
 		accrual *float64,
-		userID *uuid.UUID,
+		userID uuid.UUID,
 	) error
 	Close()
 }

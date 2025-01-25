@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/RexArseny/loyalty_system/internal/app/repository"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -47,21 +49,37 @@ func NewInteractor(
 func (i *Interactor) runStatusCheck(ctx context.Context) {
 	ticker := time.NewTicker(statusCheckTimer * time.Millisecond)
 	for range ticker.C {
-		order, userID, err := i.dataRepository.GetOrderForUpdate(ctx)
+		orders, err := i.dataRepository.GetOrdersForUpdate(ctx)
 		if err != nil {
 			i.logger.Error("Can not get order for update", zap.Error(err))
 			return
 		}
-		if order == nil {
+		if len(orders) == 0 {
 			continue
 		}
-		data, err := i.accrualServiceClient.GetData(ctx, order)
-		if err != nil {
-			i.logger.Error("Can not get data from accrual service", zap.Error(err))
-			return
+
+		g, ctx := errgroup.WithContext(ctx)
+		for _, order := range orders {
+			g.Go(func() error {
+				data, err := i.accrualServiceClient.GetData(ctx, order.Number)
+				if err != nil {
+					return fmt.Errorf("can not get data from accrual service: %w", err)
+				}
+				err = i.dataRepository.UpdateOrder(ctx, data.Order, string(data.Status), data.Accrual, order.UserID)
+				if err != nil {
+					return fmt.Errorf("can not update order in repository: %w", err)
+				}
+
+				return nil
+			})
 		}
-		err = i.dataRepository.UpdateOrder(ctx, data.Order, string(data.Status), data.Accrual, userID)
-		if err != nil {
+
+		if err := g.Wait(); err != nil {
+			var errTooManyRequests *external.ErrTooManyRequests
+			if errors.As(err, &errTooManyRequests) {
+				time.Sleep(time.Second * time.Duration(errTooManyRequests.RetryAfter()))
+				continue
+			}
 			i.logger.Error("Can not update order", zap.Error(err))
 			return
 		}
@@ -96,7 +114,7 @@ func (i *Interactor) Login(ctx context.Context, request models.AuthRequest) (*uu
 		return nil, fmt.Errorf("can not decode salt: %w", err)
 	}
 	if i.hash([]byte(request.Password), salt) != data.Hash {
-		return nil, repository.ErrInvalidAuthData
+		return nil, repository.NewErrInvalidAuthData(request.Login)
 	}
 
 	return &data.UserID, nil
@@ -104,7 +122,7 @@ func (i *Interactor) Login(ctx context.Context, request models.AuthRequest) (*uu
 
 func (i *Interactor) AddOrder(ctx context.Context, orderNumber int, userID uuid.UUID) error {
 	if (orderNumber%10+i.checksum(orderNumber/10))%10 != 0 {
-		return repository.ErrInvalidOrderNumber
+		return repository.NewErrInvalidOrderNumber(strconv.Itoa(orderNumber))
 	}
 
 	err := i.dataRepository.AddOrder(ctx, strconv.Itoa(orderNumber), userID)
@@ -152,7 +170,7 @@ func (i *Interactor) Withdraw(ctx context.Context, request models.WithdrawReques
 		return fmt.Errorf("can not parse order number: %w", err)
 	}
 	if (orderNumber%10+i.checksum(orderNumber/10))%10 != 0 {
-		return repository.ErrInvalidOrderNumber
+		return repository.NewErrInvalidOrderNumber(request.Order)
 	}
 
 	err = i.dataRepository.Withdraw(ctx, request.Order, request.Sum, userID)

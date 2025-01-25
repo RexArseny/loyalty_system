@@ -18,6 +18,7 @@ type Order struct {
 	Accrual    *float64
 	Number     string
 	Status     string
+	UserID     uuid.UUID
 }
 
 type Balance struct {

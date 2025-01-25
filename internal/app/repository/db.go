@@ -19,6 +19,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const ordersForUpdate = 10
+
 type DBRepository struct {
 	logger *zap.Logger
 	pool   *Pool
@@ -74,7 +76,7 @@ func (d *DBRepository) Registration(
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			return ErrOriginalLoginUniqueViolation
+			return NewErrOriginalLoginUniqueViolation(login)
 		}
 		return fmt.Errorf("can not add user: %w", err)
 	}
@@ -84,7 +86,7 @@ func (d *DBRepository) Registration(
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			return ErrOriginalLoginUniqueViolation
+			return NewErrOriginalLoginUniqueViolation(login)
 		}
 		return fmt.Errorf("can not add user: %w", err)
 	}
@@ -104,7 +106,7 @@ func (d *DBRepository) GetUser(ctx context.Context, login string) (*User, error)
 								WHERE login = $1`, login).Scan(&user.UserID, &user.Login, &user.Hash, &user.Salt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrInvalidAuthData
+			return nil, NewErrInvalidAuthData(login)
 		}
 		return nil, fmt.Errorf("can not get user: %w", err)
 	}
@@ -128,9 +130,9 @@ func (d *DBRepository) AddOrder(ctx context.Context, orderNumber string, userID 
 	err = tx.QueryRow(ctx, "SELECT user_id FROM orders WHERE order_id = $1", orderNumber).Scan(&orderUserID)
 	if err == nil {
 		if orderUserID == userID {
-			return ErrAlreadyAdded
+			return NewErrAlreadyAdded(orderNumber)
 		}
-		return ErrAlreadyAddedByAnotherUser
+		return NewErrAlreadyAddedByAnotherUser(orderNumber)
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {
 		return fmt.Errorf("can not get order: %w", err)
@@ -248,7 +250,7 @@ func (d *DBRepository) Withdraw(ctx context.Context, orderNumber string, sum flo
 func (d *DBRepository) GetWithdrawals(ctx context.Context, userID uuid.UUID) ([]Withdraw, error) {
 	rows, err := d.pool.Query(ctx, "SELECT order_id, sum, processed_at FROM withdrawals WHERE user_id = $1", userID)
 	if err != nil {
-		return nil, fmt.Errorf("can not get orders: %w", err)
+		return nil, fmt.Errorf("can not get withdrawals: %w", err)
 	}
 	defer rows.Close()
 
@@ -276,22 +278,35 @@ func (d *DBRepository) GetWithdrawals(ctx context.Context, userID uuid.UUID) ([]
 	return withdrawals, nil
 }
 
-func (d *DBRepository) GetOrderForUpdate(ctx context.Context) (*string, *uuid.UUID, error) {
-	var order string
-	var userID uuid.UUID
-	err := d.pool.QueryRow(ctx, `SELECT order_id, user_id
-								FROM orders
-								WHERE status = $1
-								ORDER BY uploaded_at DESC
-								LIMIT 1`, models.StatusNew).Scan(&order, &userID)
+func (d *DBRepository) GetOrdersForUpdate(ctx context.Context) ([]Order, error) {
+	rows, err := d.pool.Query(ctx, `SELECT order_id, user_id
+									FROM orders
+									WHERE status = $1
+									ORDER BY uploaded_at DESC
+									LIMIT $2`, models.StatusNew, ordersForUpdate)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil, nil
+		return nil, fmt.Errorf("can not get orders: %w", err)
+	}
+	defer rows.Close()
+
+	var orders []Order
+	for rows.Next() {
+		var order Order
+		err = rows.Scan(
+			&order.Number,
+			&order.UserID,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("can not read row: %w", err)
 		}
-		return nil, nil, fmt.Errorf("can not get order for update: %w", err)
+
+		orders = append(orders, order)
+	}
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("can not read rows: %w", rows.Err())
 	}
 
-	return &order, &userID, nil
+	return orders, nil
 }
 
 func (d *DBRepository) UpdateOrder(
@@ -299,7 +314,7 @@ func (d *DBRepository) UpdateOrder(
 	orderNumber string,
 	status string,
 	accrual *float64,
-	userID *uuid.UUID,
+	userID uuid.UUID,
 ) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {

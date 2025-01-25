@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"go.uber.org/zap"
 )
@@ -24,10 +25,18 @@ func NewAccrualServiceClient(logger *zap.Logger, address string) AccrualServiceC
 	}
 }
 
-func (c *AccrualServiceClient) GetData(ctx context.Context, order *string) (*AccrualResponse, error) {
-	response, err := c.client.Get(fmt.Sprintf("%s/api/orders/%s", c.address, *order))
+func (c *AccrualServiceClient) GetData(ctx context.Context, order string) (*AccrualResponse, error) {
+	response, err := c.client.Get(fmt.Sprintf("%s/api/orders/%s", c.address, order))
 	if err != nil {
 		return nil, fmt.Errorf("can not make request to accrual service: %w", err)
+	}
+
+	if response.StatusCode == http.StatusTooManyRequests {
+		retryAfter, err := strconv.Atoi(response.Header.Get(retryAfterHeader))
+		if err != nil {
+			return nil, fmt.Errorf("can not parse retry after header: %w", err)
+		}
+		return nil, NewErrTooManyRequests(retryAfter)
 	}
 
 	data, err := io.ReadAll(response.Body)

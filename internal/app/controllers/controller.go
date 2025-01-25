@@ -42,7 +42,8 @@ func (c *Controller) Registration(ctx *gin.Context) {
 
 	result, err := c.interactor.Registration(ctx, request)
 	if err != nil {
-		if errors.Is(err, repository.ErrOriginalLoginUniqueViolation) {
+		var errOriginalLoginUniqueViolation *repository.ErrOriginalLoginUniqueViolation
+		if errors.As(err, &errOriginalLoginUniqueViolation) {
 			ctx.JSON(http.StatusConflict, gin.H{"error": http.StatusText(http.StatusConflict)})
 			return
 		}
@@ -70,7 +71,8 @@ func (c *Controller) Login(ctx *gin.Context) {
 
 	result, err := c.interactor.Login(ctx, request)
 	if err != nil {
-		if errors.Is(err, repository.ErrInvalidAuthData) {
+		var errInvalidAuthData *repository.ErrInvalidAuthData
+		if errors.As(err, &errInvalidAuthData) {
 			ctx.JSON(http.StatusUnauthorized, gin.H{"error": http.StatusText(http.StatusUnauthorized)})
 			return
 		}
@@ -109,15 +111,18 @@ func (c *Controller) AddOrder(ctx *gin.Context) {
 
 	err = c.interactor.AddOrder(ctx, request, token.UserID)
 	if err != nil {
-		if errors.Is(err, repository.ErrAlreadyAdded) {
+		var errAlreadyAdded *repository.ErrAlreadyAdded
+		if errors.As(err, &errAlreadyAdded) {
 			ctx.JSON(http.StatusOK, gin.H{"error": http.StatusText(http.StatusOK)})
 			return
 		}
-		if errors.Is(err, repository.ErrAlreadyAddedByAnotherUser) {
+		var errAlreadyAddedByAnotherUser *repository.ErrAlreadyAddedByAnotherUser
+		if errors.As(err, &errAlreadyAddedByAnotherUser) {
 			ctx.JSON(http.StatusConflict, gin.H{"error": http.StatusText(http.StatusConflict)})
 			return
 		}
-		if errors.Is(err, repository.ErrInvalidOrderNumber) {
+		var errInvalidOrderNumber *repository.ErrInvalidOrderNumber
+		if errors.As(err, &errInvalidOrderNumber) {
 			ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": http.StatusText(http.StatusUnprocessableEntity)})
 			return
 		}
@@ -208,7 +213,8 @@ func (c *Controller) Withdraw(ctx *gin.Context) {
 			ctx.JSON(http.StatusPaymentRequired, gin.H{"error": http.StatusText(http.StatusPaymentRequired)})
 			return
 		}
-		if errors.Is(err, repository.ErrInvalidOrderNumber) {
+		var errInvalidOrderNumber *repository.ErrInvalidOrderNumber
+		if errors.As(err, &errInvalidOrderNumber) {
 			ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": http.StatusText(http.StatusUnprocessableEntity)})
 			return
 		}

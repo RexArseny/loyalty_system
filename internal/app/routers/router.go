@@ -24,13 +24,13 @@ func NewRouter(
 		groupWithoutJWT.POST("/api/user/login", controller.Login)
 	}
 
-	groupWitJWT := router.Group("", middleware.GetJWT())
+	groupWithJWT := router.Group("", middleware.GetJWT())
 	{
-		groupWitJWT.POST("/api/user/orders", controller.AddOrder)
-		groupWitJWT.GET("/api/user/orders", controller.GetOrders)
-		groupWitJWT.GET("/api/user/balance", controller.GetBalance)
-		groupWitJWT.POST("/api/user/balance/withdraw", controller.Withdraw)
-		groupWitJWT.GET("/api/user/withdrawals", controller.GetWithdrawals)
+		groupWithJWT.POST("/api/user/orders", controller.AddOrder)
+		groupWithJWT.GET("/api/user/orders", controller.GetOrders)
+		groupWithJWT.GET("/api/user/balance", controller.GetBalance)
+		groupWithJWT.POST("/api/user/balance/withdraw", controller.Withdraw)
+		groupWithJWT.GET("/api/user/withdrawals", controller.GetWithdrawals)
 	}
 
 	return router, nil

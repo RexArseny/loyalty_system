@@ -5,6 +5,8 @@ const (
 	StatusInvalid    Status = "INVALID"
 	StatusProcessing Status = "PROCESSING"
 	StatusProcessed  Status = "PROCESSED"
+
+	retryAfterHeader = "Retry-After"
 )
 
 type Status string

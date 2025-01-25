@@ -20,8 +20,6 @@ const (
 	maxAge        = 900
 )
 
-var ErrNoJWT = errors.New("no jwt in cookie")
-
 type Middleware struct {
 	publicKey  crypto.PublicKey
 	privateKey crypto.PrivateKey

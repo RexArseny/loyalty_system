@@ -170,7 +170,7 @@ func TestRegistration(t *testing.T) {
 
 			assert.Equal(t, tt.stastusCode, result.StatusCode)
 
-			w.Result().Body.Close()
+			result.Body.Close()
 		})
 	}
 }
@@ -219,7 +219,7 @@ func TestLogin(t *testing.T) {
 
 			assert.Equal(t, tt.stastusCode, result.StatusCode)
 
-			w.Result().Body.Close()
+			result.Body.Close()
 		})
 	}
 }
@@ -289,8 +289,8 @@ func TestAddOrder(t *testing.T) {
 
 			assert.Equal(t, tt.stastusCode, result.StatusCode)
 
-			wLogin.Result().Body.Close()
-			w.Result().Body.Close()
+			resultLogin.Body.Close()
+			result.Body.Close()
 		})
 	}
 }
@@ -358,8 +358,8 @@ func TestGetOrders(t *testing.T) {
 
 			assert.Equal(t, tt.stastusCode, result.StatusCode)
 
-			wLogin.Result().Body.Close()
-			w.Result().Body.Close()
+			resultLogin.Body.Close()
+			result.Body.Close()
 		})
 	}
 }
@@ -427,8 +427,8 @@ func TestGetBalance(t *testing.T) {
 
 			assert.Equal(t, tt.stastusCode, result.StatusCode)
 
-			wLogin.Result().Body.Close()
-			w.Result().Body.Close()
+			resultLogin.Body.Close()
+			result.Body.Close()
 		})
 	}
 }
@@ -498,8 +498,8 @@ func TestWithdraw(t *testing.T) {
 
 			assert.Equal(t, tt.stastusCode, result.StatusCode)
 
-			wLogin.Result().Body.Close()
-			w.Result().Body.Close()
+			resultLogin.Body.Close()
+			result.Body.Close()
 		})
 	}
 }
@@ -567,8 +567,8 @@ func TestGetWithdrawals(t *testing.T) {
 
 			assert.Equal(t, tt.stastusCode, result.StatusCode)
 
-			wLogin.Result().Body.Close()
-			w.Result().Body.Close()
+			resultLogin.Body.Close()
+			result.Body.Close()
 		})
 	}
 }
